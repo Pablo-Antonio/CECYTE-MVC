@@ -1,0 +1,55 @@
+/*****************************************************************************************/
+---------- TRIGGERS FUNCIONALES ----------
+//Trigger cuando se realiza un prestamo
+DELIMITER $$
+CREATE TRIGGER nuevoPrestamo  
+AFTER INSERT
+ON prestamos  FOR EACH ROW
+BEGIN  
+ UPDATE equipos SET status = 2 WHERE folio = NEW.folio;
+END;$$
+
+//Trigger cuando se realiza una devolucion
+DELIMITER $$
+CREATE TRIGGER devolucion  
+AFTER UPDATE
+ON prestamos FOR EACH ROW
+BEGIN  
+IF NEW.incidencia = 0 THEN
+ UPDATE equipos SET status = 1 WHERE folio = NEW.folio;
+END IF;
+
+IF NEW.incidencia = 1 THEN
+ UPDATE equipos SET status = 0 WHERE folio = NEW.folio;
+END IF;
+
+END;$$
+
+//Trigger cuando se realiza una incidencia
+DELIMITER $$
+CREATE TRIGGER actualizarReporte  
+AFTER INSERT
+ON  incidencias  FOR EACH ROW
+BEGIN  
+ UPDATE prestamos SET status = 0, incidencia = 1, fechaDevolucion = NEW.fechaReporte
+ WHERE idPrestamo = NEW.idPrestamo;
+END;$$
+
+//cuando se revisa la incidencia
+DELIMITER $$
+CREATE TRIGGER actualizarIncidencia  
+AFTER UPDATE
+ON  incidencias  FOR EACH ROW
+BEGIN  
+
+IF NEW.status = 0 THEN
+ UPDATE equipos SET status = 1 WHERE folio = NEW.folio;
+END IF;
+
+IF NEW.status = 2 THEN
+ UPDATE equipos SET status = 0 WHERE folio = NEW.folio;
+END IF;
+END;$$
+
+
+
